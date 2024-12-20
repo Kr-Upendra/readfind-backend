@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { globalErrorHandler } from "./controllers";
 import { CustomResponse, ErrorHandler } from "./utils";
+import { scrapeRouter } from "./routes";
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.get("/", (req: Request, res: Response<CustomResponse>) => {
     message: "Base route..",
   });
 });
+
+app.use("/api/scrape", scrapeRouter);
 
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
   return next(
