@@ -3,8 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { globalErrorHandler } from "./controllers";
 import { CustomResponse, ErrorHandler } from "./utils";
-import { scrapeRouter } from "./routes";
-import { bookRouter } from "./routes/book.route";
+import { scrapeRouter, bookRouter } from "./routes";
 
 const app = express();
 
