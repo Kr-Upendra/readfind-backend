@@ -4,6 +4,7 @@ import morgan from "morgan";
 import { globalErrorHandler } from "./controllers";
 import { CustomResponse, ErrorHandler } from "./utils";
 import { scrapeRouter } from "./routes";
+import { bookRouter } from "./routes/book.route";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/", (req: Request, res: Response<CustomResponse>) => {
 });
 
 app.use("/api/scrape", scrapeRouter);
+app.use("/api/books", bookRouter);
 
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
   return next(

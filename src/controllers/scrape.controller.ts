@@ -4,11 +4,10 @@ import { scrapeSections } from "../services";
 
 export const scrapeController = asyncHandler(
   async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
-    const data = await scrapeSections();
+    await scrapeSections();
     res.json({
       status: "success",
-      message: "Data retrieved successfully",
-      data,
+      message: "Section Data retrieved successfully.",
     });
   }
 );
