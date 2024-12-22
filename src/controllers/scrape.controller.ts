@@ -1,13 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import { asyncHandler, CustomResponse } from "../utils";
-import { scrapeSections } from "../services";
+import { scrapeDetail, scrapeSections } from "../services";
 
-export const scrapeController = asyncHandler(
+export const scrapeBookSections = asyncHandler(
   async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
     await scrapeSections();
     res.json({
       status: "success",
       message: "Section Data retrieved successfully.",
+    });
+  }
+);
+
+export const scrapeBookDetails = asyncHandler(
+  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
+    const { bookId } = req.params;
+
+    await scrapeDetail(bookId);
+    res.json({
+      status: "success",
+      message: `Book detail data retrieved successfully [${bookId}].`,
     });
   }
 );

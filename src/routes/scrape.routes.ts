@@ -1,7 +1,8 @@
-import { scrapeController } from "../controllers";
+import { scrapeBookSections, scrapeBookDetails } from "../controllers";
 import express from "express";
 const router = express.Router();
 
-router.route("/sections").get(scrapeController);
+router.route("/book-sections").get(scrapeBookSections);
+router.route("/book-detail/:bookId").get(scrapeBookDetails);
 
 export { router as scrapeRouter };
