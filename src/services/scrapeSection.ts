@@ -39,13 +39,17 @@ const scrapeBooks = (htmlData: string): Book[] => {
 
   $("div.resultsBook").each((_, element) => {
     const title = $(element).find("h2.bookTitle a").text().trim();
-    const image =
+    const imageUrl =
       $(element).find("img.cover-image-search-list").attr("src") || "";
     const authorName = $(element).find("span.bookAuthor a").text().trim();
 
     const bookUrl = $(element).find("h2.bookTitle a").eq(1).attr("href") || "";
     const id =
       $(element).find("h2.bookTitle a").eq(0).attr("name")?.split("-")[1] || "";
+
+    const image = imageUrl.includes("SMALL")
+      ? imageUrl.replace("SMALL", "MEDIUM")
+      : imageUrl;
 
     const author = authorName.includes("null")
       ? authorName.split("null ")[1]
