@@ -15,9 +15,23 @@ export const getNewBooks = asyncHandler(
   }
 );
 
-export const getPopularBooks = asyncHandler(
+export const getLastMonthPopularBooks = asyncHandler(
   async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
     const result = await redisClient.get(RedisKeys.popularBooks);
+    let popularBookData;
+    if (result) popularBookData = JSON.parse(result);
+
+    res.json({
+      status: "success",
+      message: "Popular books list.",
+      data: popularBookData,
+    });
+  }
+);
+
+export const getPopularInTeenBooks = asyncHandler(
+  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
+    const result = await redisClient.get(RedisKeys.teensBooks);
     let popularBookData;
     if (result) popularBookData = JSON.parse(result);
 
