@@ -3,7 +3,7 @@ import { asyncHandler, CustomResponse } from "../utils";
 import { scrapeDetail, scrapeSections } from "../services";
 
 export const scrapeBookSections = asyncHandler(
-  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
+  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
     await scrapeSections();
     res.json({
       status: "success",
@@ -13,7 +13,7 @@ export const scrapeBookSections = asyncHandler(
 );
 
 export const scrapeBookDetails = asyncHandler(
-  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
+  async (req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
     const { bookId } = req.params;
 
     await scrapeDetail(bookId);

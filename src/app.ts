@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import morgan from "morgan";
+import "./cron/cronJob";
 import { globalErrorHandler } from "./controllers";
 import { CustomResponse, ErrorHandler } from "./utils";
 import { scrapeRouter, bookRouter } from "./routes";
@@ -21,7 +22,7 @@ app.get("/", (req: Request, res: Response<CustomResponse>) => {
 app.use("/api/scrape", scrapeRouter);
 app.use("/api/books", bookRouter);
 
-app.all("*", (req: Request, res: Response, next: NextFunction) => {
+app.all("*", (req: Request, _res: Response, next: NextFunction) => {
   return next(
     new ErrorHandler(`Can't find ${req.originalUrl} on this server.`, 404)
   );

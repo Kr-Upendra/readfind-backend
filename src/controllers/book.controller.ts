@@ -1,14 +1,29 @@
 import { Request, Response, NextFunction } from "express";
 import { asyncHandler, CustomResponse, redisClient, RedisKeys } from "../utils";
-import { scrapeDetail } from "../services";
+import { scrapeDetail, scrapeSections } from "../services";
 
 export const getNewBooks = asyncHandler(
-  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
-    const result = await redisClient.get(RedisKeys.newBooks);
+  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
+    const result = await redisClient.get(RedisKeys.newBooks.key);
+
+    if (!result) {
+      console.log("Cache miss or expired, scraping data...");
+      await scrapeSections();
+      const result = await redisClient.get(RedisKeys.newBooks.key);
+      let newBookData;
+      if (result) newBookData = JSON.parse(result);
+
+      return res.json({
+        status: "success",
+        message: "New books list.",
+        data: newBookData,
+      });
+    }
+
     let newBookData;
     if (result) newBookData = JSON.parse(result);
 
-    res.json({
+    res.status(200).json({
       status: "success",
       message: "New books list.",
       data: newBookData,
@@ -17,8 +32,20 @@ export const getNewBooks = asyncHandler(
 );
 
 export const getLastMonthPopularBooks = asyncHandler(
-  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
-    const result = await redisClient.get(RedisKeys.popularBooks);
+  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
+    const result = await redisClient.get(RedisKeys.popularBooks.key);
+
+    if (!result) {
+      console.log("Cache miss or expired, scraping data...");
+      const newBookData = await scrapeSections();
+
+      return res.json({
+        status: "success",
+        message: "Popular books list.",
+        data: newBookData,
+      });
+    }
+
     let popularBookData;
     if (result) popularBookData = JSON.parse(result);
 
@@ -31,23 +58,36 @@ export const getLastMonthPopularBooks = asyncHandler(
 );
 
 export const getPopularInTeenBooks = asyncHandler(
-  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
-    const result = await redisClient.get(RedisKeys.teensBooks);
+  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
+    const result = await redisClient.get(RedisKeys.teensBooks.key);
+
+    if (!result) {
+      console.log("Cache miss or expired, scraping data...");
+      const newBookData = await scrapeSections();
+
+      return res.json({
+        status: "success",
+        message: "Teens books list.",
+        data: newBookData,
+      });
+    }
+
     let popularBookData;
     if (result) popularBookData = JSON.parse(result);
 
     res.json({
       status: "success",
-      message: "Popular books list.",
+      message: "Teens books list.",
       data: popularBookData,
     });
   }
 );
 
 export const getBookDetails = asyncHandler(
-  async (req: Request, res: Response<CustomResponse>, next: NextFunction) => {
+  async (req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
     const { bookId } = req.params;
-    const cachedResult = await redisClient.get(RedisKeys.bookId(bookId));
+    const { key } = RedisKeys.bookId(bookId);
+    const cachedResult = await redisClient.get(key);
     let result = cachedResult ? JSON.parse(cachedResult) : null;
 
     if (!result) {
@@ -55,14 +95,14 @@ export const getBookDetails = asyncHandler(
       const result = await scrapeDetail(bookId);
       return res.status(200).json({
         status: "success",
-        message: `Book detail data retrieved successfully [${bookId}].`,
+        message: `Book detail data retrieved successfully.`,
         data: result,
       });
     } else {
       console.log("already there");
       return res.status(200).json({
         status: "success",
-        message: `Book detail data retrieved successfully [${bookId}].`,
+        message: `Book detail data retrieved successfully.`,
         data: result,
       });
     }

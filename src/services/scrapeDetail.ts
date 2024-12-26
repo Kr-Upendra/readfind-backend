@@ -3,12 +3,14 @@ import * as cheerio from "cheerio";
 import { Book, redisClient, RedisKeys } from "../utils";
 
 export const scrapeDetail = async (bookId: string): Promise<Book> => {
-  const bookDetailUrl = `https://www.bookshare.org/browse/book/${bookId}`;
+  const baseWebsiteUrl = process.env.BASE_SCRAPE_WEBSITE_URL;
+  const bookDetailUrl = `${baseWebsiteUrl}browse/book/${bookId}`;
+  const { key, expTime } = RedisKeys.bookId(bookId);
 
   try {
     const { data: bookDetailData } = await axios.get(bookDetailUrl);
     const bookDetail = scrapeBooks(bookDetailData, bookDetailUrl, bookId);
-    await redisClient.set(RedisKeys.bookId(bookId), JSON.stringify(bookDetail));
+    await redisClient.set(key, JSON.stringify(bookDetail), "EX", expTime);
 
     console.log("Scraping completed and data stored in Redis.");
     return bookDetail;
@@ -75,66 +77,3 @@ const scrapeBooks = (htmlData: string, url: string, id: string): Book => {
 
   return book;
 };
-
-// const scrapeBooks = (htmlData: string, url: string, id: string): Book => {
-//   const $ = cheerio.load(htmlData);
-//   const book: Book = {};
-
-//   const title = $('h1.bookDetail[itemprop="name"]').text().trim();
-//   const image = $("img.cover-image-book-detail").attr("src") || "";
-//   const authors: string[] = [];
-//   $('span[itemprop="author"] span[itemprop="name"] a').each((i, el) => {
-//     const authorName = $(el).text().trim();
-//     authors.push(authorName);
-//   });
-//   const description = $('dd[itemprop="description"]').text().trim();
-
-//   const isbn13 = $('dd[itemprop="isbn"]').text().trim();
-//   const numberOfPages = $('dt:contains("Book Size:")')
-//     .next("dd")
-//     .find('span[itemprop="numberOfPages"]')
-//     .text()
-//     .trim();
-//   const relatedIsbns = $('dt:contains("Related ISBNs")')
-//     .next("dd")
-//     .text()
-//     .trim();
-
-//   const language = $('dt:contains("Language:")')
-//     .next("dd")
-//     .find('span[itemprop="inLanguage"]')
-//     .text()
-//     .trim();
-
-//   const readingAge = $('dt:contains("Reading Age:")').next("dd").text().trim();
-
-//   const adultContent = $('dd:contains("Adult content")').text().includes("Yes")
-//     ? "Yes"
-//     : "No";
-//   const genres: string[] = [];
-//   $('dd span[itemprop="keywords"]').each((i, el) => {
-//     genres.push($(el).text().trim());
-//   });
-//   const publisher = $('dd[itemprop="publisher"] span[itemprop="name"]')
-//     .text()
-//     .trim();
-
-//   console.log({
-//     id,
-//     url,
-//     title,
-//     image,
-//     authors,
-//     description,
-//     publisher,
-//     adultContent,
-//     genres,
-//     readingAge,
-//     language,
-//     isbn13,
-//     numberOfPages,
-//     relatedIsbns,
-//   });
-
-//   return book;
-// };
