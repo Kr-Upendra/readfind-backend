@@ -1,6 +1,6 @@
 // src/cron/cronJob.ts
 import cron from "node-cron";
-import { scrapeSections } from "../services";
+import { scrapeBySection } from "../services";
 
 let lastRunDate: any = null;
 
@@ -10,7 +10,9 @@ cron.schedule("0 1 * * *", async () => {
   if (!lastRunDate || currentDate - lastRunDate >= 3 * 24 * 60 * 60 * 1000) {
     console.log("Running the scraping task every 3 days at 1 AM...");
     try {
-      await scrapeSections();
+      await scrapeBySection("popular", "/popular/MONTH");
+      await scrapeBySection("new", "/newOnBookshare");
+      await scrapeBySection("teen", "/popular/Teens");
       lastRunDate = currentDate;
     } catch (error) {
       console.error("Error running the scheduled scrape task:", error);

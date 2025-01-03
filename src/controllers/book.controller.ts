@@ -1,84 +1,65 @@
 import { Request, Response, NextFunction } from "express";
-import { asyncHandler, CustomResponse, redisClient, RedisKeys } from "../utils";
-import { scrapeDetail, scrapeSections } from "../services";
+import {
+  asyncHandler,
+  CustomResponse,
+  redisClient,
+  RedisKeys,
+  sectionSubUrl,
+} from "../utils";
+import { scrapeByCategory, scrapeBySection, scrapeDetail } from "../services";
 
 export const getNewBooks = asyncHandler(
-  async (_req: Request, res: Response, _next: NextFunction) => {
-    const result = await redisClient.get(RedisKeys.newBooks.key);
-
-    if (!result) {
-      console.log("Cache miss or expired, scraping data...");
-      await scrapeSections();
-      const result = await redisClient.get(RedisKeys.newBooks.key);
-      let newBookData;
-      if (result) newBookData = JSON.parse(result);
-
-      return res.json({
-        status: "success",
-        message: "New books list.",
-        data: newBookData,
-      });
-    }
-
-    let newBookData;
-    if (result) newBookData = JSON.parse(result);
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const section = "new";
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const result = await scrapeBySection(section, sectionSubUrl[section], page);
 
     res.status(200).json({
       status: "success",
       message: "New books list.",
-      data: newBookData,
+      data: result,
     });
   }
 );
 
 export const getLastMonthPopularBooks = asyncHandler(
-  async (_req: Request, res: Response, _next: NextFunction) => {
-    const result = await redisClient.get(RedisKeys.popularBooks.key);
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const section = "popular";
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const result = await scrapeBySection(section, sectionSubUrl[section], page);
 
-    if (!result) {
-      console.log("Cache miss or expired, scraping data...");
-      const newBookData = await scrapeSections();
-
-      return res.json({
-        status: "success",
-        message: "Popular books list.",
-        data: newBookData,
-      });
-    }
-
-    let popularBookData;
-    if (result) popularBookData = JSON.parse(result);
-
-    res.json({
+    res.status(200).json({
       status: "success",
       message: "Popular books list.",
-      data: popularBookData,
+      data: result,
     });
   }
 );
 
 export const getPopularInTeenBooks = asyncHandler(
-  async (_req: Request, res: Response, _next: NextFunction) => {
-    const result = await redisClient.get(RedisKeys.teensBooks.key);
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const section = "teen";
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const result = await scrapeBySection(section, sectionSubUrl[section], page);
 
-    if (!result) {
-      console.log("Cache miss or expired, scraping data...");
-      const newBookData = await scrapeSections();
-
-      return res.json({
-        status: "success",
-        message: "Teens books list.",
-        data: newBookData,
-      });
-    }
-
-    let popularBookData;
-    if (result) popularBookData = JSON.parse(result);
-
-    res.json({
+    res.status(200).json({
       status: "success",
       message: "Teens books list.",
-      data: popularBookData,
+      data: result,
+    });
+  }
+);
+
+export const getBookByCategory = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const category = req.params.categoryName;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const result = await scrapeByCategory(category, page);
+
+    res.status(200).json({
+      status: "success",
+      message: "List of books.",
+      data: result,
     });
   }
 );

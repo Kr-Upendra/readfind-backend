@@ -1,29 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { asyncHandler } from "../utils";
-import {
-  scrapeByCategory,
-  scrapeBySection,
-  scrapeDetail,
-  scrapeSections,
-} from "../services";
-
-export const scrapeBookSections = asyncHandler(
-  async (_req: Request, res: Response, _next: NextFunction) => {
-    await scrapeSections();
-    res.json({
-      status: "success",
-      message: "Section Data retrieved successfully.",
-    });
-  }
-);
+import { asyncHandler, sectionSubUrl } from "../utils";
+import { scrapeByCategory, scrapeBySection, scrapeDetail } from "../services";
 
 export const scrapeBookSection = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const { sectionName } = req.params;
+    const section: string = req.params.sectionName;
     const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-    console.log({ section: sectionName, page });
 
-    const result = await scrapeBySection(sectionName, page);
+    const result = await scrapeBySection(section, sectionSubUrl[section], page);
 
     res.json({
       status: "success",

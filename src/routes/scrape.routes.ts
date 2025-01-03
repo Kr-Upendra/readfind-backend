@@ -1,5 +1,4 @@
 import {
-  scrapeBookSections,
   scrapeBookDetails,
   scrapeBooksByCategory,
   scrapeBookSection,
@@ -7,7 +6,6 @@ import {
 import express from "express";
 const router = express.Router();
 
-router.route("/book-sections").get(scrapeBookSections);
 router.route("/book-section/:sectionName").get(scrapeBookSection);
 router.route("/book-category/:categoryName").get(scrapeBooksByCategory);
 router.route("/book-detail/:bookId").get(scrapeBookDetails);
