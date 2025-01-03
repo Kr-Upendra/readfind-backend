@@ -1,9 +1,8 @@
 import axios from "axios";
-import * as cheerio from "cheerio";
-import { Book, redisClient, RedisKeys } from "../utils";
+import { expTime, redisClient, RedisKeys, scrapeBookList } from "../utils";
+const baseWebsiteUrl = process.env.BASE_SCRAPE_WEBSITE_URL;
 
 export const scrapeSections = async () => {
-  const baseWebsiteUrl = process.env.BASE_SCRAPE_WEBSITE_URL;
   const popularBooksUrl = `${baseWebsiteUrl}discover/popular/MONTH?resultsView=LIST`;
   const newBooksUrl = `${baseWebsiteUrl}discover/newOnBookshare?resultsView=LIST`;
   const teensBooksUrl = `${baseWebsiteUrl}discover/popular/Teens?resultsView=LIST`;
@@ -66,36 +65,57 @@ export const scrapeSections = async () => {
   }
 };
 
-const scrapeBooks = (htmlData: string): Book[] => {
-  const $ = cheerio.load(htmlData);
-  const books: Book[] = [];
+export const scrapeBySection = async (section: string, page = 1) => {
+  const limit = 25;
+  const offset = (page - 1) * limit;
+  const url = `${baseWebsiteUrl}discover/popular/MONTH?offset=${offset}&resultsView=LIST`;
+  const key = `books:section:${section}:page:${page}`;
 
-  $("div.resultsBook").each((_, element) => {
-    const authors: string[] = [];
-    const title = $(element).find("h2.bookTitle a").text().trim();
-    const imageUrl =
-      $(element).find("img.cover-image-search-list").attr("src") || "";
-    $(element)
-      .find("span.bookAuthor a")
-      .each((_i, el) => {
-        const authorName = $(el).text().trim();
-        const cleanAuthorName = authorName.includes("null")
-          ? authorName.split("null ")[1]
-          : authorName;
-        authors.push(cleanAuthorName);
-      });
+  try {
+    const cachedBookRecords = await redisClient.get(key);
+    let bookRecords = cachedBookRecords ? JSON.parse(cachedBookRecords) : null;
+    if (!bookRecords) {
+      console.log(`Scraping section[${section}] book records...`);
+      const { data: rawData } = await axios.get(url);
+      bookRecords = scrapeBookList(rawData);
+      await redisClient.set(key, JSON.stringify(bookRecords), "EX", expTime);
+      console.log(`Section[${section}] Book record scraped successfully.`);
+      return bookRecords;
+    } else {
+      console.log(
+        `Section[${section}] book record found in cache. Skipping scrape.`
+      );
+    }
+  } catch (err) {
+    console.error("Error scraping the webpage:", err);
+    throw new Error("Failed to scrape data.");
+  }
+};
 
-    const bookUrl = $(element).find("h2.bookTitle a").eq(1).attr("href") || "";
-    const id =
-      $(element).find("h2.bookTitle a").eq(0).attr("name")?.split("-")[1] || "";
+export const scrapeByCategory = async (category: string, page = 1) => {
+  const limit = 25;
+  const offset = (page - 1) * limit;
+  const bookUrl = `${baseWebsiteUrl}browse/category?sortOrder=ISBN&language=ENGLISH&limit=${limit}&offset=${offset}&resultsView=LIST&key=Animals`;
+  const key = `books:category:${category}:page:${page}`;
 
-    const image = imageUrl.includes("SMALL")
-      ? imageUrl.replace("SMALL", "MEDIUM")
-      : imageUrl;
+  try {
+    const cachedBookRecords = await redisClient.get(key);
+    let bookRecords = cachedBookRecords ? JSON.parse(cachedBookRecords) : null;
 
-    const author = authors.join(", ");
-    books.push({ id, title, image, author, url: bookUrl });
-  });
-
-  return books;
+    if (!bookRecords) {
+      console.log(`Scraping category[${category}] book records...`);
+      const { data: rawData } = await axios.get(bookUrl);
+      bookRecords = scrapeBookList(rawData);
+      await redisClient.set(key, JSON.stringify(bookRecords), "EX", expTime);
+      console.log(`Category[${category}] Book record scraped successfully.`);
+      return bookRecords;
+    } else {
+      console.log(
+        `Category[${category}] book record found in cache. Skipping scrape.`
+      );
+    }
+  } catch (err) {
+    console.error("Error scraping the webpage:", err);
+    throw new Error("Failed to scrape data.");
+  }
 };
