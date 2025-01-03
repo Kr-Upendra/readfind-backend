@@ -3,7 +3,7 @@ import { asyncHandler, CustomResponse, redisClient, RedisKeys } from "../utils";
 import { scrapeDetail, scrapeSections } from "../services";
 
 export const getNewBooks = asyncHandler(
-  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
+  async (_req: Request, res: Response, _next: NextFunction) => {
     const result = await redisClient.get(RedisKeys.newBooks.key);
 
     if (!result) {
@@ -32,7 +32,7 @@ export const getNewBooks = asyncHandler(
 );
 
 export const getLastMonthPopularBooks = asyncHandler(
-  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
+  async (_req: Request, res: Response, _next: NextFunction) => {
     const result = await redisClient.get(RedisKeys.popularBooks.key);
 
     if (!result) {
@@ -58,7 +58,7 @@ export const getLastMonthPopularBooks = asyncHandler(
 );
 
 export const getPopularInTeenBooks = asyncHandler(
-  async (_req: Request, res: Response<CustomResponse>, _next: NextFunction) => {
+  async (_req: Request, res: Response, _next: NextFunction) => {
     const result = await redisClient.get(RedisKeys.teensBooks.key);
 
     if (!result) {

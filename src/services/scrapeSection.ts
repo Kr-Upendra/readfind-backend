@@ -77,9 +77,12 @@ const scrapeBooks = (htmlData: string): Book[] => {
       $(element).find("img.cover-image-search-list").attr("src") || "";
     $(element)
       .find("span.bookAuthor a")
-      .each((i, el) => {
+      .each((_i, el) => {
         const authorName = $(el).text().trim();
-        authors.push(authorName);
+        const cleanAuthorName = authorName.includes("null")
+          ? authorName.split("null ")[1]
+          : authorName;
+        authors.push(cleanAuthorName);
       });
 
     const bookUrl = $(element).find("h2.bookTitle a").eq(1).attr("href") || "";
@@ -91,7 +94,6 @@ const scrapeBooks = (htmlData: string): Book[] => {
       : imageUrl;
 
     const author = authors.join(", ");
-
     books.push({ id, title, image, author, url: bookUrl });
   });
 

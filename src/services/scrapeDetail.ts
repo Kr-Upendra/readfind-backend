@@ -51,9 +51,12 @@ const scrapeBooks = (htmlData: string, url: string, id: string): Book => {
   };
 
   const authors: string[] = [];
-  $('span[itemprop="author"] span[itemprop="name"] a').each((i, el) => {
+  $('span[itemprop="author"] span[itemprop="name"] a').each((_i, el) => {
     const authorName = $(el).text().trim();
-    authors.push(authorName);
+    const cleanAuthorName = authorName.includes("null")
+      ? authorName.split("null ")[1]
+      : authorName;
+    authors.push(cleanAuthorName);
   });
 
   book.author = authors.join(", ");
